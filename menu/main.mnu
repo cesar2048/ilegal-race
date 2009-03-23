@@ -1,0 +1,18 @@
+BUTTONS_COUNT 12	imagenes/menu/menu.png
+BUTTON	590	440	0	NULL				imagenes/menu/salir.png
+
+BUTTON	55	200 1	maps/carrerav2.ase	imagenes/menu/prev/carrerav2prev.png
+BUTTON	160	200	1	maps/posta.ase		imagenes/menu/prev/postaPrev.png
+BUTTON	265	200	1	maps/redrock.ase	imagenes/menu/prev/redrockprev.png
+BUTTON	370	200	1	maps/error.ase		imagenes/menu/prev/errroprev.png
+
+BUTTON	55  100 2	carros/carro1.ase	imagenes/menu/prev/carro2.png
+BUTTON	260 100 2	carros/carro2.ase	imagenes/menu/prev/carro1.png
+
+BUTTON	200 410	3	NULL				imagenes/menu/start.png
+
+BUTTON	55  320 4   1					imagenes/menu/facil.png
+BUTTON	160 320 4   2					imagenes/menu/medio.png
+BUTTON	265 320 4   3					imagenes/menu/dificil.png
+BUTTON	370 320 4   4					imagenes/menu/impos.png
+
