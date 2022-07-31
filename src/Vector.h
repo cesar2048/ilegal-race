@@ -2,8 +2,6 @@
 #ifndef _CVECTOR_H_
 #define _CVECTOR_H_
 
-//#include "CObjeto.h"
-
 typedef struct Vertice {
 	float coords[3];
 } Vertice;

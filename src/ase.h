@@ -3,7 +3,7 @@
 
 #include "CEscena.h"
 
-bool		CargarModeloASE			(char*, CEscena*);
+bool		CargarModeloASE			(const char*, CEscena*);
 
 
 #endif

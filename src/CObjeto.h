@@ -28,7 +28,7 @@ class CObjeto
 		CObjeto ();
 		CObjeto( const CObjeto &c);
 		~CObjeto();
-		void	cambiarNombre(char*);		
+		void	cambiarNombre(const char*);		
 		bool	usarMaterial();
 		void	renderizar(void);
 		float	*planoBase(float,float,bool=false);

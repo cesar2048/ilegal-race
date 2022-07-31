@@ -1,8 +1,8 @@
 #ifndef __CTEXTURA_H_
 #define __CTEXTURA_H_
 
-#include <SDL/SDL.h>
-#include <GL/gl.h>
+#include <SDL.h>
+#include <GL/glew.h>
 #include <stdio.h>
 #include <string.h>
 

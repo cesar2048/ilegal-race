@@ -1,6 +1,9 @@
-#include <SDL/SDL.h>
+#include <SDL.h>
+#include <gl/glew.h>
+#include <map>
 #include <math.h>
 #include <time.h>
+#include <windows.h>
 
 #include "CObjeto.h"
 #include "CTextura.h"
@@ -10,20 +13,22 @@
 #include "ase.h"
 #include "Juego.h"
 #include "glfont.h"
-#include "menu/Menu.h"
+#include "Menu.h"
 
 
 // GLOBALES
-int nAncho = 640, nAlto = 480;
-char *estacion = "FM 90.1";
+int nAncho = 1080, nAlto = 720;
+const char *estacion = "FM 90.1";
 int radios = 0;
 bool fullScreen = false;
-bool bTeclas[512];
+std::map<int, bool> bTeclas;
+
 CEscena	*Escena;
 CCamara *miCamara;
 Carro carro;
 Mapa mapa;
 CObjeto *path;
+SDL_Window* win;
 
 // PROTOTIPOS
 void Renderiza(GLvoid);
@@ -34,44 +39,49 @@ Mapa inicializarMapa(Mapa m);
 bool Inicializa();
 void Salida();
 void Juego();
+bool CreaVentanaGL(const char* szTitulo, int nAncho, int nAlto, int nBits, bool bPantallaCompleta);
 
 /**
  *  Funcion M A I N
  */
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
 	SDL_Event event;
 
 	Inicializa();
 	int value = 1;
 
-	while(value) {
+	while (value) {
 		// menu al principio ( y despues de una carrera)
-		value = menu(&mapa, nAncho, nAlto, fullScreen);
-		
-		if ( value == INICIA_CARRERA ) {
+		value = menu(&mapa, 640, 480, fullScreen);
+
+		if (value == INICIA_CARRERA) {
+			if (!CreaVentanaGL("Juego", nAncho, nAlto, 16, fullScreen)) {
+				fprintf(stderr, "Error al crear ventana para GL\n");
+			}
 			mapa = inicializarMapa(mapa);
-              startGameMusic();
-			  startCarMusic();
+			startGameMusic();
+			startCarMusic();
 			mapa.timeStart = SDL_GetTicks() + 3001;
 
 			// ciclo de vida de la carrera
-			while(true) {
+			while (true) {
 				SDL_PollEvent(&event);
-				if(event.key.keysym.sym == SDLK_ESCAPE) break;
-				
+				if (event.key.keysym.sym == SDLK_ESCAPE) break;
+
 				mapa.timeElapsed = SDL_GetTicks() - mapa.timeStart;
 				ControlEntrada(event);
-				
+
 				Juego();
 				Renderiza();
 			}
-			
+
 			// destruir el mapa
+			SDL_DestroyWindow(win);
 			delete Escena;
-			destruirMenu();
 		}
 	}
 
+	// destruirMenu();
 	Salida();
 	return 0;
 }
@@ -92,7 +102,7 @@ void Juego() {
 	int indexAnt = carro.index;
 	CObjeto *objBase;
 	for(int i=0; i<mapa.nParts; i++){
-		sprintf(objName, "Base%i", i);
+		sprintf_s(objName, "Base%i", i);
 		objBase = Escena->getObjectByName(objName);
 		if(objBase ) {
 			if ( objBase->isEncima(carro.x, carro.z, carro.y)) {
@@ -101,9 +111,9 @@ void Juego() {
 			}
 		}
 	}
-	
+
     glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
-    drawText(estacion, 50, 50);
+    drawText((char*) estacion, 50, 50);
 	
 	/** buscando los objetos de esta parte del mapa **/
 	sprintf(objName, "Pista%i", carro.index);
@@ -143,8 +153,7 @@ void Juego() {
 
 Carro ControladorDelCarro(Carro car, Uint32 miliSeconds) {
 	CObjeto *objCaida = Escena->getObjectByName("Caida");
-/*	bool estaCayendo = objCaida->isOver(car.x, car.z) != -1;*/
- bool estaCayendo = (!objCaida) ? false: objCaida->isOver(car.x, car.z) != -1;
+	bool estaCayendo = (!objCaida) ? false: objCaida->isOver(car.x, car.z) != -1;
 	if (estaCayendo) {
 		car.y -= 9.8 * miliSeconds / 100;
 		car.giroV += 0.5;
@@ -285,7 +294,6 @@ bool Inicializa() {
             return 1;
     }
     
-    SDL_WM_SetCaption("ILEGAL RACE", NULL);
 	return true;
 }
 
@@ -312,19 +320,13 @@ Carro inicializaCarro(Carro carro) {
 }
 
 Mapa inicializarMapa(Mapa mapa) {
-	if ( !CreaVentanaGL("Juego", nAncho, nAlto, 16, fullScreen)) {
-		fprintf(stderr, "Error al crear ventana para GL\n");
-	}	
-	SDL_WM_SetCaption("ILEGAL RACE", NULL);
-	
 	/*** CARGA DE DATOS DEL MAPA **/
 	Escena = new CEscena;
 	miCamara = new CCamara( Escena );
 	
-	CargarModeloASE( mapa.fileName, Escena );
-/*	CargarModeloASE("maps/carro1.ASE", Escena);*/
-   CargarModeloASE(mapa.carro, Escena);
-	CargarModeloASE("maps/controles.ASE", Escena);
+	CargarModeloASE(mapa.fileName, Escena );
+	CargarModeloASE(mapa.carro, Escena);
+	CargarModeloASE("assets/maps/controles.ASE", Escena);
 	
 	guiInitialize(Escena, nAlto, nAncho);
 	path = Escena->getObjectByName("path");
@@ -404,47 +406,49 @@ void radios_control(){
  * ajusta los parametros de control del carro de acuerdo a la entrada
  */
 void ControlEntrada(SDL_Event ev) {
-	switch(ev.type) {
-		case SDL_KEYDOWN:
-			bTeclas[ev.key.keysym.sym] = true;
-			break;
-		case SDL_KEYUP:
-			bTeclas[ev.key.keysym.sym] = false;
+	switch (ev.type) {
+	case SDL_KEYDOWN:
+		bTeclas[ev.key.keysym.sym] = true;
+		break;
+	case SDL_KEYUP:
+		bTeclas[ev.key.keysym.sym] = false;
 	}
-	
+
 	if (bTeclas[SDLK_LEFT] && !bTeclas[SDLK_RIGHT]) {
 		carro.gira -= 0.5;
-		if ( carro.gira < -5 ) carro.gira = -5;
+		if (carro.gira < -5) carro.gira = -5;
 	} else if (bTeclas[SDLK_RIGHT] && !bTeclas[SDLK_LEFT]) {
-		carro.gira+=0.5;
-		if ( carro.gira >  5 ) carro.gira =  5;
-	}else{
-		if ( carro.gira > 0 ) carro.gira -= 0.5;
-		else if ( carro.gira < 0 ) carro.gira += 0.5;
+		carro.gira += 0.5;
+		if (carro.gira > 5) carro.gira = 5;
+	} else {
+		if (carro.gira > 0) carro.gira -= 0.5;
+		else if (carro.gira < 0) carro.gira += 0.5;
 	}
-	
+
 	if (bTeclas[SDLK_UP] && !bTeclas[SDLK_DOWN]) {
 		carro.acelera = 1;
-	}else if (!bTeclas[SDLK_UP] && bTeclas[SDLK_DOWN]) {
+	} else if (!bTeclas[SDLK_UP] && bTeclas[SDLK_DOWN]) {
 		carro.acelera = -1;
-	}else{
+	} else {
 		carro.acelera = 0;
 	}
-	
-	if ( bTeclas[SDLK_SPACE] ){
+
+	if (bTeclas[SDLK_SPACE]) {
 		carro.brake = 1;
 	} else {
 		carro.brake = 0;
 	}
-	if ( bTeclas[SDLK_a] ) {
-		 glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+
+	if (bTeclas[SDLK_a]) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	}
-	if ( bTeclas[SDLK_s] ) {
-		glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
+	if (bTeclas[SDLK_s]) {
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	}
-		if ( bTeclas[SDLK_r] ) {
-    	startGameMusic();
-    	radios_control();
+	if (bTeclas[SDLK_r]) {
+		bTeclas[SDLK_r] = false;
+		startGameMusic();
+		radios_control();
 	}
 };
 
@@ -453,8 +457,8 @@ void ControlEntrada(SDL_Event ev) {
  * Motor grafico
  */
 void Renderiza(GLvoid) {
-		// swaping	
-	SDL_GL_SwapBuffers();
+	// swaping
+	SDL_GL_SwapWindow(win);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	
@@ -498,7 +502,7 @@ void Renderiza(GLvoid) {
 	
 		// dibuja objetos del segmento anterior y siguiente	
 		char objName[255];
-		char *names[] = {"Colision%i", "Lado%i", "Pista%i"};
+		const char *names[] = {"Colision%i", "Lado%i", "Pista%i"};
 		int nNext = ( carro.index + mapa.nParts + 1 ) % mapa.nParts;
 		int nPrev = ( carro.index + mapa.nParts - 1) % mapa.nParts;
 		for(int i=0; i<3; i++){
@@ -519,6 +523,36 @@ void Renderiza(GLvoid) {
 
 }
 
+
+/**
+ * Crea una ventana
+ */
+bool CreaVentanaGL(const char* Titulo, int ancho, int alto, int bits, bool fullscreen) {
+	// fprintf(stderr, "window %ix%i a %i bits\n", ancho, alto, bits);
+	int flags = SDL_WINDOW_BORDERLESS | SDL_WINDOW_OPENGL;
+	if (fullscreen) flags |= SDL_WINDOW_FULLSCREEN;
+
+	win = SDL_CreateWindow("Ilegal race", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, ancho, alto, flags);
+	SDL_GLContext glContext = SDL_GL_CreateContext(win);
+
+	GLenum error = glewInit();
+	if (error != GLEW_OK) {
+		char* msg = (char*)glewGetErrorString(error);
+		MessageBoxA(NULL, msg, "Error caption", MB_ICONERROR);
+	}
+
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
+	InicializaEscenaGL(ancho, alto);
+
+	if (!InicializaGL()) {
+		SDL_Quit();
+		// fprintf(stderr,"%s() -- Fallo en la inicialización.\n", __FUNCTION__);
+		return 0;
+	}
+	return 1;
+}
 
 
 

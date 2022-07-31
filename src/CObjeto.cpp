@@ -31,7 +31,7 @@ CObjeto::~CObjeto() {
 /**
  * Cambia el nombre de este objeto
  */
-void CObjeto::cambiarNombre(char *nuevoNombre) {
+void CObjeto::cambiarNombre(const char *nuevoNombre) {
 	strcpy( nombre, nuevoNombre);
 }
 

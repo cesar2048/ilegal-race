@@ -42,7 +42,7 @@ typedef struct
 //*********************************************************
 
 //Creates a glFont
-int glFontCreate (GLFONT *Font, char *FileName, int Tex);
+int glFontCreate (GLFONT *Font, const char *FileName, int Tex);
 
 //Deletes a glFont
 void glFontDestroy (GLFONT *Font);

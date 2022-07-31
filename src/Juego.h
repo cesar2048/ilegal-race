@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <GL/glew.h>
 #include <GL/gl.h>
 
 #include "CEscena.h"

@@ -1,11 +1,11 @@
 #ifndef _CESCENA_H_
 #define _CESCENA_H_
 
+#include <string.h>
 #include "CObjeto.h"
 #include "CMaterial.h"
 #include "Lista.h"
-#include "string.h"
-//#include <vector>
+
 
 class CEscena {
 	public:
@@ -16,8 +16,8 @@ class CEscena {
 		
 		CEscena();
 		~CEscena();
-		CObjeto	*NuevoObjeto(char *szNombre);
-		CObjeto *getObjectByName(char *);
+		CObjeto	*NuevoObjeto(const char *szNombre);
+		CObjeto *getObjectByName(const char *);
 };
 
 

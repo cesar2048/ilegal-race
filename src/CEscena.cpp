@@ -15,7 +15,7 @@ CEscena::~CEscena() {
 	listaMateriales = NULL;
 }
 
-CObjeto *CEscena::NuevoObjeto(char *nombre) {
+CObjeto *CEscena::NuevoObjeto(const char *nombre) {
 	CObjeto *pNuevoObjeto = new CObjeto();
 			pNuevoObjeto->pEscena = this;
 			pNuevoObjeto->cambiarNombre(nombre);
@@ -29,7 +29,7 @@ CObjeto *CEscena::NuevoObjeto(char *nombre) {
 	return listaObjetos[nObjetos++];
 }
 
-CObjeto *CEscena::getObjectByName(char *nombre) {
+CObjeto *CEscena::getObjectByName(const char *nombre) {
 	int i=0;
 	for(; i < nObjetos; i++ ) {
 		if ( !strcmp(nombre, listaObjetos[i]->nombre ) ) {

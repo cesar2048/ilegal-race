@@ -1,8 +1,8 @@
 #ifndef _CCAMARA_H
 #define _CCAMARA_H
 
-#include "CEscena.h"
 #include <math.h>
+#include "CEscena.h"
 
 #define MATH_PI 3.14159286
 #define X 0
